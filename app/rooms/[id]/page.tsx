@@ -15,8 +15,8 @@ async function getListing(id: string): Promise<Listing | null> {
       .eq('id', id)
       .single()
     if (error) return null
-    // Increment view count
-    await supabase.rpc('increment_views', { listing_id: id }).catch(() => {})
+    // Increment view count (fire and forget)
+    try { await supabase.rpc('increment_views', { listing_id: id }) } catch {}
     return data as Listing
   } catch {
     return null

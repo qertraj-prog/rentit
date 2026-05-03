@@ -11,12 +11,16 @@ export default function GlobalError({ error, reset }: { error: Error & { digest?
   return (
     <html lang="en">
       <body style={{
-        margin: 0, padding: 0,
+        margin: 0,
         minHeight: '100vh',
         background: 'linear-gradient(135deg, #0A1628 0%, #0D2144 100%)',
-        display: 'flex', flexDirection: 'column',
-        alignItems: 'center', justifyContent: 'center',
-        padding: '24px', textAlign: 'center', gap: '20px',
+        display: 'flex',
+        flexDirection: 'column',
+        alignItems: 'center',
+        justifyContent: 'center',
+        padding: '24px',
+        textAlign: 'center',
+        gap: '20px',
         fontFamily: 'DM Sans, sans-serif',
       }}>
         <div style={{ fontSize: '4rem' }}>⚠️</div>

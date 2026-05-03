@@ -18,6 +18,7 @@ interface SearchParams {
   sort?: string
   lat?: string
   lng?: string
+  [key: string]: string | undefined
 }
 
 async function getListings(params: SearchParams): Promise<Listing[]> {
