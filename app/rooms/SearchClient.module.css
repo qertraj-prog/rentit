@@ -1,0 +1,395 @@
+.pageWrap {
+  min-height: 100vh;
+}
+
+/* Mobile top bar */
+.mobileTopBar {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 12px 16px;
+  background: var(--card);
+  border-bottom: 1px solid var(--border);
+  position: sticky;
+  top: 72px;
+  z-index: 30;
+}
+
+@media (min-width: 1024px) {
+  .mobileTopBar {
+    display: none;
+  }
+}
+
+.mobileSearch {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  background: var(--bg);
+  border: 1.5px solid var(--border);
+  border-radius: var(--radius-md);
+  padding: 8px 14px;
+}
+
+.mobileSearchIcon {
+  color: var(--text-muted);
+  flex-shrink: 0;
+}
+
+.mobileSearchInput {
+  flex: 1;
+  background: none;
+  border: none;
+  font-size: 14px;
+  color: var(--text-primary);
+  outline: none;
+  min-width: 0;
+}
+
+.filterToggleBtn {
+  white-space: nowrap;
+  flex-shrink: 0;
+  position: relative;
+}
+
+.filterBadge {
+  position: absolute;
+  top: -3px;
+  right: -3px;
+  width: 8px;
+  height: 8px;
+  background: var(--yellow);
+  border-radius: 50%;
+}
+
+/* Layout */
+.layout {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 24px;
+  padding-top: 24px;
+  padding-bottom: 40px;
+  align-items: start;
+}
+
+@media (min-width: 1024px) {
+  .layout {
+    grid-template-columns: 280px 1fr;
+  }
+}
+
+/* Sidebar */
+.sidebar {
+  display: none;
+  position: sticky;
+  top: 96px;
+}
+
+@media (min-width: 1024px) {
+  .sidebar {
+    display: block;
+  }
+}
+
+/* Filter panel */
+.filterPanel {
+  background: var(--card);
+  border-radius: var(--radius-lg);
+  box-shadow: var(--shadow-card);
+  overflow: hidden;
+}
+
+.filterHeader {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 16px 20px;
+  border-bottom: 1px solid var(--border);
+}
+
+.filterTitle {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 0.95rem;
+  font-weight: 700;
+  flex: 1;
+}
+
+.clearBtn {
+  font-size: 12px !important;
+  color: var(--error) !important;
+  padding: 4px 10px !important;
+}
+
+.clearBtn:hover {
+  background: var(--error-light) !important;
+}
+
+.drawerClose {
+  display: none;
+  background: none;
+  border: none;
+  color: var(--text-muted);
+  cursor: pointer;
+  padding: 4px;
+  border-radius: 8px;
+}
+
+.drawerClose:hover {
+  background: var(--bg-2);
+}
+
+/* Show close btn in drawer */
+.drawer .drawerClose {
+  display: flex;
+}
+
+/* Filter section */
+.filterSection {
+  border-bottom: 1px solid var(--border);
+}
+
+.filterSection:last-child {
+  border-bottom: none;
+}
+
+.filterSectionHeader {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 14px 20px;
+  background: none;
+  border: none;
+  width: 100%;
+  text-align: left;
+  cursor: pointer;
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--text-primary);
+  transition: background 0.2s;
+}
+
+.filterSectionHeader:hover {
+  background: var(--bg);
+}
+
+.chevron {
+  transition: transform 0.2s;
+  color: var(--text-muted);
+}
+
+.chevronOpen {
+  transform: rotate(180deg);
+}
+
+.filterSectionBody {
+  padding: 12px 20px 16px;
+}
+
+/* Price inputs */
+.priceInputs {
+  display: flex;
+  align-items: flex-end;
+  gap: 8px;
+  margin-bottom: 12px;
+}
+
+.priceField {
+  flex: 1;
+}
+
+.priceField .input {
+  font-size: 13px;
+  padding: 8px 10px;
+}
+
+.priceDash {
+  font-size: 14px;
+  color: var(--text-muted);
+  padding-bottom: 10px;
+  flex-shrink: 0;
+}
+
+.applyBtn {
+  font-size: 13px !important;
+  padding: 9px !important;
+}
+
+/* Checkbox list */
+.checkList {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.checkItem {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  cursor: pointer;
+  font-size: 13px;
+  color: var(--text-secondary);
+  transition: color 0.2s;
+}
+
+.checkItem:hover {
+  color: var(--text-primary);
+}
+
+.checkbox {
+  width: 16px;
+  height: 16px;
+  accent-color: var(--yellow);
+  cursor: pointer;
+  flex-shrink: 0;
+}
+
+/* Pill group */
+.pillGroup {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.pill {
+  padding: 6px 14px;
+  border-radius: var(--radius-full);
+  border: 1.5px solid var(--border);
+  background: transparent;
+  font-size: 12px;
+  font-weight: 500;
+  color: var(--text-secondary);
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.pill:hover {
+  border-color: var(--dark);
+  color: var(--dark);
+}
+
+.pillActive {
+  border-color: var(--yellow) !important;
+  background: var(--yellow) !important;
+  color: var(--dark) !important;
+  font-weight: 700;
+}
+
+/* Sort bar */
+.sortBar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  margin-bottom: 16px;
+  flex-wrap: wrap;
+}
+
+.resultCount {
+  font-size: 14px;
+  color: var(--text-secondary);
+}
+
+.resultCount strong {
+  color: var(--dark);
+}
+
+.sortWrap {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-shrink: 0;
+}
+
+.sortSelect {
+  padding: 8px 12px !important;
+  font-size: 13px !important;
+  width: auto;
+}
+
+/* Active filters */
+.activeFilters {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-bottom: 20px;
+}
+
+.filterTag {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.filterTagClose {
+  background: none;
+  border: none;
+  cursor: pointer;
+  color: inherit;
+  opacity: 0.7;
+  display: flex;
+  align-items: center;
+  padding: 0;
+  line-height: 1;
+}
+
+.filterTagClose:hover {
+  opacity: 1;
+}
+
+/* Empty state */
+.emptyState {
+  text-align: center;
+  padding: 80px 24px;
+}
+
+.emptyEmoji {
+  font-size: 4rem;
+  margin-bottom: 16px;
+}
+
+.emptyState h3 {
+  font-size: 1.2rem;
+  margin-bottom: 8px;
+}
+
+.emptyState p {
+  font-size: 14px;
+  color: var(--text-muted);
+  margin-bottom: 24px;
+}
+
+/* Mobile Drawer */
+.drawer {
+  position: fixed;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  background: var(--card);
+  border-radius: var(--radius-xl) var(--radius-xl) 0 0;
+  box-shadow: 0 -8px 40px rgba(0, 0, 0, 0.15);
+  z-index: 50;
+  transform: translateY(100%);
+  transition: transform 0.35s cubic-bezier(0.4, 0, 0.2, 1);
+  max-height: 85vh;
+  overflow-y: auto;
+}
+
+.drawerOpen {
+  transform: translateY(0);
+}
+
+.drawerHandle {
+  width: 40px;
+  height: 4px;
+  background: var(--border);
+  border-radius: 2px;
+  margin: 12px auto 0;
+}
+
+/* Main */
+.main {
+  min-width: 0;
+}
