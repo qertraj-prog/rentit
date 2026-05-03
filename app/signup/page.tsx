@@ -1,15 +1,25 @@
 'use client'
 
-import { useState } from 'react'
+import { Suspense, useState } from 'react'
 import Link from 'next/link'
-import { useRouter } from 'next/navigation'
+import { useRouter, useSearchParams } from 'next/navigation'
 import { Mail, Lock, User, Phone, Eye, EyeOff, ArrowRight, Home, Users } from 'lucide-react'
 import { createClient } from '@/lib/supabase/client'
 import toast from 'react-hot-toast'
 import styles from '../auth.module.css'
 
 export default function SignupPage() {
+  return (
+    <Suspense>
+      <SignupForm />
+    </Suspense>
+  )
+}
+
+function SignupForm() {
   const router = useRouter()
+  const searchParams = useSearchParams()
+  const redirect = searchParams.get('redirect') || '/'
   const [role, setRole] = useState<'tenant' | 'owner'>('tenant')
   const [fullName, setFullName] = useState('')
   const [phone, setPhone] = useState('')
@@ -34,8 +44,8 @@ export default function SignupPage() {
     if (error) {
       toast.error(error.message)
     } else {
-      toast.success('Account created! Please check your email to verify.')
-      router.push('/login')
+      toast.success('Account created! Check your email to verify 🙏')
+      router.push(redirect)
     }
   }
 

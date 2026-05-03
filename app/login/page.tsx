@@ -1,15 +1,25 @@
 'use client'
 
-import { useState } from 'react'
+import { Suspense, useState } from 'react'
 import Link from 'next/link'
-import { useRouter } from 'next/navigation'
+import { useRouter, useSearchParams } from 'next/navigation'
 import { Mail, Lock, Eye, EyeOff, ArrowRight } from 'lucide-react'
 import { createClient } from '@/lib/supabase/client'
 import toast from 'react-hot-toast'
 import styles from '../auth.module.css'
 
 export default function LoginPage() {
+  return (
+    <Suspense>
+      <LoginForm />
+    </Suspense>
+  )
+}
+
+function LoginForm() {
   const router = useRouter()
+  const searchParams = useSearchParams()
+  const redirect = searchParams.get('redirect') || '/'
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
   const [showPass, setShowPass] = useState(false)
@@ -24,8 +34,8 @@ export default function LoginPage() {
     if (error) {
       toast.error(error.message)
     } else {
-      toast.success('Welcome back!')
-      router.push('/')
+      toast.success('Welcome back! 🙏')
+      router.push(redirect)
       router.refresh()
     }
   }
@@ -84,7 +94,7 @@ export default function LoginPage() {
         <div className={styles.divider}><span>or</span></div>
 
         <p className={styles.switchText}>
-          Don&apos;t have an account? <Link href="/signup" className={styles.switchLink}>Create one →</Link>
+          Don&apos;t have an account? <Link href={`/signup${redirect !== '/' ? `?redirect=${encodeURIComponent(redirect)}` : ''}`} className={styles.switchLink}>Create one →</Link>
         </p>
       </div>
     </div>

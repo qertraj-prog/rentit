@@ -2,16 +2,18 @@
 
 import { useState, useEffect, useCallback } from 'react'
 import Link from 'next/link'
+import { useRouter } from 'next/navigation'
 import {
   Phone, MessageCircle, Heart, Share2, ChevronLeft, ChevronRight,
   X, MapPin, Calendar, Ruler, Building, Zap, Droplets, Car,
-  UtensilsCrossed, PawPrint, Clock, ArrowLeft, Flag, Copy, Check
+  UtensilsCrossed, PawPrint, Clock, ArrowLeft, Flag, Check, LogIn
 } from 'lucide-react'
 import RoomCard from '@/components/RoomCard'
 import {
   Listing, formatPrice, getListingImages, ROOM_TYPE_LABELS,
   GENDER_LABELS, FURNISHING_LABELS, AMENITY_CONFIG
 } from '@/lib/utils'
+import { useUser } from '@/lib/hooks/useUser'
 import styles from './RoomDetailClient.module.css'
 
 interface RoomDetailClientProps {
@@ -19,12 +21,17 @@ interface RoomDetailClientProps {
   similar: Listing[]
 }
 
+const ADMIN_WHATSAPP = '919123444893'
+
 export default function RoomDetailClient({ listing, similar }: RoomDetailClientProps) {
   const images = getListingImages(listing)
   const [currentImg, setCurrentImg] = useState(0)
   const [lightboxOpen, setLightboxOpen] = useState(false)
   const [saved, setSaved] = useState(false)
   const [copied, setCopied] = useState(false)
+  const [showLoginPrompt, setShowLoginPrompt] = useState(false)
+  const router = useRouter()
+  const { user, profile } = useUser()
 
   // Save to recently viewed
   useEffect(() => {
@@ -61,14 +68,33 @@ export default function RoomDetailClient({ listing, similar }: RoomDetailClientP
     }
   }
 
-  const whatsappMsg = encodeURIComponent(
-    `Hi, I saw your room on RentIt. Is "${listing.title}" still available? Please let me know the details.`
-  )
-  const whatsappUrl = listing.users?.phone
-    ? `https://wa.me/91${listing.users.phone.replace(/[^0-9]/g, '')}?text=${whatsappMsg}`
-    : `https://wa.me/?text=${whatsappMsg}`
+  // WhatsApp message with customer details
+  const buildWhatsAppUrl = () => {
+    const name  = profile?.full_name || user?.email || 'A RentIt user'
+    const phone = profile?.phone || 'Not provided'
+    const msg = encodeURIComponent(
+      `🏠 *New Inquiry via RentIt*\n\n` +
+      `*Property:* ${listing.title}\n` +
+      `*Location:* ${listing.city || listing.colony || ''}\n` +
+      `*Rent:* ₹${formatPrice(listing.monthly_rent)}/mo\n\n` +
+      `*Customer Name:* ${name}\n` +
+      `*Customer Phone:* ${phone}\n\n` +
+      `Please connect them with the owner. Thank you! 🙏`
+    )
+    return `https://wa.me/${ADMIN_WHATSAPP}?text=${msg}`
+  }
 
-  const ownerPhone = listing.users?.phone || 'Not available'
+  const handleContact = (type: 'whatsapp' | 'call') => {
+    if (!user) {
+      // Save current page and redirect to signup
+      const returnUrl = encodeURIComponent(window.location.pathname)
+      router.push(`/signup?redirect=${returnUrl}`)
+      return
+    }
+    if (type === 'whatsapp') {
+      window.open(buildWhatsAppUrl(), '_blank')
+    }
+  }
 
   // Info rows
   const infoRows = [
@@ -298,24 +324,33 @@ export default function RoomDetailClient({ listing, similar }: RoomDetailClientP
 
               {/* Contact buttons */}
               <div className={styles.ctaButtons}>
-                <a
-                  href={`tel:${ownerPhone}`}
-                  className={`btn btn-primary btn-lg w-full ${styles.callBtn}`}
-                  id="call-owner-btn"
-                >
-                  <Phone size={18} />
-                  {ownerPhone !== 'Not available' ? `Call Owner: ${ownerPhone}` : 'Call Owner'}
-                </a>
-                <a
-                  href={whatsappUrl}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className={`btn ${styles.waBtn}`}
-                  id="whatsapp-btn"
-                >
-                  <MessageCircle size={18} />
-                  WhatsApp Owner
-                </a>
+                {!user ? (
+                  // Not logged in — show signup prompt
+                  <>
+                    <button
+                      className={`btn btn-primary btn-lg w-full ${styles.callBtn}`}
+                      onClick={() => handleContact('whatsapp')}
+                      id="contact-owner-btn"
+                    >
+                      <LogIn size={18} />
+                      Login to Contact Owner
+                    </button>
+                    <p style={{ fontSize: 12, color: 'var(--text-muted)', textAlign: 'center', marginTop: 8 }}>
+                      Free signup • Takes 30 seconds
+                    </p>
+                  </>
+                ) : (
+                  // Logged in — show WhatsApp button
+                  <button
+                    className={`btn ${styles.waBtn} w-full`}
+                    onClick={() => handleContact('whatsapp')}
+                    id="whatsapp-btn"
+                    style={{ fontSize: 15, padding: '14px 20px' }}
+                  >
+                    <MessageCircle size={20} />
+                    Contact via WhatsApp
+                  </button>
+                )}
               </div>
 
               <div className={styles.divider} />
