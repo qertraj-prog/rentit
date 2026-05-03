@@ -30,10 +30,10 @@ function SignupForm() {
 
   const handleSignup = async (e: React.FormEvent) => {
     e.preventDefault()
-    if (password.length < 6) { toast.error('Password must be at least 6 characters'); return }
+    if (password.length < 6) { toast.error('Password kam se kam 6 characters ka hona chahiye'); return }
     setLoading(true)
     const supabase = createClient()
-    const { error } = await supabase.auth.signUp({
+    const { data, error } = await supabase.auth.signUp({
       email,
       password,
       options: {
@@ -42,10 +42,21 @@ function SignupForm() {
     })
     setLoading(false)
     if (error) {
-      toast.error(error.message)
-    } else {
-      toast.success('Account created! Check your email to verify 🙏')
+      // Rate limit hit
+      if (error.message.toLowerCase().includes('rate limit') || error.message.toLowerCase().includes('email rate')) {
+        toast.error('Bahut zyada signup attempts. 1 ghante baad try karo ya doosra email use karo.')
+      } else {
+        toast.error(error.message)
+      }
+    } else if (data.session) {
+      // Email confirm OFF — user immediately logged in
+      toast.success(`Welcome, ${fullName}! 🎉`)
       router.push(redirect)
+      router.refresh()
+    } else {
+      // Email confirm ON — need to verify
+      toast.success('Confirmation email bheja gaya! Inbox check karo.')
+      router.push(`/login${redirect !== '/' ? `?redirect=${encodeURIComponent(redirect)}` : ''}`)
     }
   }
 
