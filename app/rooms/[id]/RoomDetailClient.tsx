@@ -2,18 +2,16 @@
 
 import { useState, useEffect, useCallback } from 'react'
 import Link from 'next/link'
-import { useRouter } from 'next/navigation'
 import {
-  Phone, MessageCircle, Heart, Share2, ChevronLeft, ChevronRight,
+  MessageCircle, Heart, Share2, ChevronLeft, ChevronRight,
   X, MapPin, Calendar, Ruler, Building, Zap, Droplets, Car,
-  UtensilsCrossed, PawPrint, Clock, ArrowLeft, Flag, Check, LogIn
+  UtensilsCrossed, PawPrint, Clock, ArrowLeft, Flag, Check, Phone, User
 } from 'lucide-react'
 import RoomCard from '@/components/RoomCard'
 import {
   Listing, formatPrice, getListingImages, ROOM_TYPE_LABELS,
   GENDER_LABELS, FURNISHING_LABELS, AMENITY_CONFIG
 } from '@/lib/utils'
-import { useUser } from '@/lib/hooks/useUser'
 import styles from './RoomDetailClient.module.css'
 
 interface RoomDetailClientProps {
@@ -21,7 +19,7 @@ interface RoomDetailClientProps {
   similar: Listing[]
 }
 
-const ADMIN_WHATSAPP = '919123444893'
+const ADMIN_WA = '919123444893'
 
 export default function RoomDetailClient({ listing, similar }: RoomDetailClientProps) {
   const images = getListingImages(listing)
@@ -29,9 +27,11 @@ export default function RoomDetailClient({ listing, similar }: RoomDetailClientP
   const [lightboxOpen, setLightboxOpen] = useState(false)
   const [saved, setSaved] = useState(false)
   const [copied, setCopied] = useState(false)
-  const [showLoginPrompt, setShowLoginPrompt] = useState(false)
-  const router = useRouter()
-  const { user, profile } = useUser()
+
+  // Contact modal state
+  const [showModal, setShowModal] = useState(false)
+  const [cName, setCName] = useState('')
+  const [cPhone, setCPhone] = useState('')
 
   // Save to recently viewed
   useEffect(() => {
@@ -68,32 +68,20 @@ export default function RoomDetailClient({ listing, similar }: RoomDetailClientP
     }
   }
 
-  // WhatsApp message with customer details
-  const buildWhatsAppUrl = () => {
-    const name  = profile?.full_name || user?.email || 'A RentIt user'
-    const phone = profile?.phone || 'Not provided'
+  // Direct WhatsApp — no login needed
+  const openWhatsApp = () => {
+    if (!cName.trim() || !cPhone.trim()) return
     const msg = encodeURIComponent(
       `🏠 *New Inquiry via RentIt*\n\n` +
       `*Property:* ${listing.title}\n` +
-      `*Location:* ${listing.city || listing.colony || ''}\n` +
+      `*Location:* ${[listing.colony, listing.city].filter(Boolean).join(', ')}\n` +
       `*Rent:* ₹${formatPrice(listing.monthly_rent)}/mo\n\n` +
-      `*Customer Name:* ${name}\n` +
-      `*Customer Phone:* ${phone}\n\n` +
-      `Please connect them with the owner. Thank you! 🙏`
+      `*Customer Name:* ${cName.trim()}\n` +
+      `*Customer Phone:* ${cPhone.trim()}`
     )
-    return `https://wa.me/${ADMIN_WHATSAPP}?text=${msg}`
-  }
-
-  const handleContact = (type: 'whatsapp' | 'call') => {
-    if (!user) {
-      // Save current page and redirect to signup
-      const returnUrl = encodeURIComponent(window.location.pathname)
-      router.push(`/signup?redirect=${returnUrl}`)
-      return
-    }
-    if (type === 'whatsapp') {
-      window.open(buildWhatsAppUrl(), '_blank')
-    }
+    window.open(`https://wa.me/${ADMIN_WA}?text=${msg}`, '_blank')
+    setShowModal(false)
+    setCName(''); setCPhone('')
   }
 
   // Info rows
@@ -322,35 +310,17 @@ export default function RoomDetailClient({ listing, similar }: RoomDetailClientP
 
               <div className={styles.divider} />
 
-              {/* Contact buttons */}
+              {/* Contact button — NO login needed */}
               <div className={styles.ctaButtons}>
-                {!user ? (
-                  // Not logged in — show signup prompt
-                  <>
-                    <button
-                      className={`btn btn-primary btn-lg w-full ${styles.callBtn}`}
-                      onClick={() => handleContact('whatsapp')}
-                      id="contact-owner-btn"
-                    >
-                      <LogIn size={18} />
-                      Login to Contact Owner
-                    </button>
-                    <p style={{ fontSize: 12, color: 'var(--text-muted)', textAlign: 'center', marginTop: 8 }}>
-                      Free signup • Takes 30 seconds
-                    </p>
-                  </>
-                ) : (
-                  // Logged in — show WhatsApp button
-                  <button
-                    className={`btn ${styles.waBtn} w-full`}
-                    onClick={() => handleContact('whatsapp')}
-                    id="whatsapp-btn"
-                    style={{ fontSize: 15, padding: '14px 20px' }}
-                  >
-                    <MessageCircle size={20} />
-                    Contact via WhatsApp
-                  </button>
-                )}
+                <button
+                  className={`btn ${styles.waBtn} w-full`}
+                  onClick={() => setShowModal(true)}
+                  id="whatsapp-btn"
+                  style={{ fontSize: 16, padding: '16px 20px', fontWeight: 800 }}
+                >
+                  <MessageCircle size={22} />
+                  Contact on WhatsApp
+                </button>
               </div>
 
               <div className={styles.divider} />
@@ -435,6 +405,77 @@ export default function RoomDetailClient({ listing, similar }: RoomDetailClientP
             ))}
           </div>
           <div className={styles.lightboxCounter}>{currentImg + 1} / {images.length}</div>
+        </div>
+      )}
+
+      {/* ===== CONTACT MODAL ===== */}
+      {showModal && (
+        <div
+          style={{
+            position: 'fixed', inset: 0, zIndex: 200,
+            background: 'rgba(0,0,0,0.7)', backdropFilter: 'blur(4px)',
+            display: 'flex', alignItems: 'center', justifyContent: 'center',
+            padding: 20,
+          }}
+          onClick={e => { if (e.target === e.currentTarget) setShowModal(false) }}
+        >
+          <div style={{
+            background: '#fff', borderRadius: 20, padding: 28,
+            width: '100%', maxWidth: 400,
+            boxShadow: '0 24px 64px rgba(0,0,0,0.3)',
+          }}>
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 20 }}>
+              <h3 style={{ margin: 0, fontSize: '1.2rem', fontWeight: 800, color: '#0A1628', fontFamily: 'Sora, sans-serif' }}>
+                📞 Contact Owner
+              </h3>
+              <button onClick={() => setShowModal(false)} style={{ border: 'none', background: 'none', cursor: 'pointer', padding: 4 }}>
+                <X size={20} color="#6b7280" />
+              </button>
+            </div>
+
+            <p style={{ margin: '0 0 20px', fontSize: 13, color: '#6b7280', lineHeight: 1.5 }}>
+              <strong style={{ color: '#0A1628' }}>{listing.title}</strong> — apna naam aur number do, admin se WhatsApp pe connect ho jao.
+            </p>
+
+            <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: 10, border: '1.5px solid #e5e7eb', borderRadius: 10, padding: '10px 14px' }}>
+                <User size={16} color="#9ca3af" />
+                <input
+                  type="text"
+                  placeholder="Aapka naam"
+                  value={cName}
+                  onChange={e => setCName(e.target.value)}
+                  style={{ border: 'none', outline: 'none', flex: 1, fontSize: 14, color: '#0A1628' }}
+                  autoFocus
+                />
+              </div>
+              <div style={{ display: 'flex', alignItems: 'center', gap: 10, border: '1.5px solid #e5e7eb', borderRadius: 10, padding: '10px 14px' }}>
+                <Phone size={16} color="#9ca3af" />
+                <input
+                  type="tel"
+                  placeholder="Aapka phone number"
+                  value={cPhone}
+                  onChange={e => setCPhone(e.target.value)}
+                  style={{ border: 'none', outline: 'none', flex: 1, fontSize: 14, color: '#0A1628' }}
+                  onKeyDown={e => e.key === 'Enter' && openWhatsApp()}
+                />
+              </div>
+              <button
+                onClick={openWhatsApp}
+                disabled={!cName.trim() || !cPhone.trim()}
+                style={{
+                  marginTop: 4, padding: '14px', borderRadius: 12, border: 'none',
+                  background: cName.trim() && cPhone.trim() ? '#25D366' : '#e5e7eb',
+                  color: cName.trim() && cPhone.trim() ? '#fff' : '#9ca3af',
+                  fontWeight: 800, fontSize: 15, cursor: cName.trim() && cPhone.trim() ? 'pointer' : 'not-allowed',
+                  display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8,
+                  transition: 'all 0.2s',
+                }}
+              >
+                <MessageCircle size={18} /> WhatsApp pe Contact Karo
+              </button>
+            </div>
+          </div>
         </div>
       )}
     </div>
