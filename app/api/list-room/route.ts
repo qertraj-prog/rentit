@@ -95,25 +95,30 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: error.message }, { status: 500 })
     }
 
-    // Upload photos if provided
+    // Upload photos using service role (bypasses storage RLS)
     const photos = formData.getAll('photos') as File[]
     if (photos.length > 0 && data?.id) {
       for (let i = 0; i < photos.length; i++) {
         const file = photos[i]
         if (!file || file.size === 0) continue
-        const ext = file.name.split('.').pop() || 'jpg'
+        const ext = file.name.split('.').pop()?.toLowerCase() || 'jpg'
         const path = `${data.id}/${i}-${Date.now()}.${ext}`
 
-        const { data: uploadData, error: uploadError } = await supabase.storage
+        const { data: uploadData, error: uploadError } = await insertClient.storage
           .from('listing-photos')
-          .upload(path, file, { contentType: file.type, upsert: false })
+          .upload(path, file, { contentType: file.type, upsert: true })
 
-        if (!uploadError && uploadData) {
-          const { data: urlData } = supabase.storage
+        if (uploadError) {
+          console.error(`Photo ${i} upload error:`, uploadError.message)
+          continue // skip this photo, don't fail the whole request
+        }
+
+        if (uploadData) {
+          const { data: urlData } = insertClient.storage
             .from('listing-photos')
             .getPublicUrl(path)
 
-          await supabase.from('listing_photos').insert({
+          await insertClient.from('listing_photos').insert({
             listing_id: data.id,
             photo_url:  urlData.publicUrl,
             sort_order: i,
