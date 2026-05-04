@@ -9,7 +9,15 @@ import {
 } from 'lucide-react'
 import styles from '../admin.module.css'
 
-const STATUS_OPTIONS = ['all', 'pending', 'active', 'rejected', 'paused', 'rented']
+const STATUS_OPTIONS = ['pending', 'active', 'rejected', 'paused', 'rented', 'deleted', 'all']
+
+const TIME_OPTIONS = [
+  { id: 'all_time', label: 'All Time' },
+  { id: 'today', label: 'Today' },
+  { id: 'yesterday', label: 'Yesterday' },
+  { id: 'last_7_days', label: 'Last 7 Days' },
+  { id: 'last_30_days', label: 'Last 30 Days' },
+]
 
 const BADGE: Record<string, string> = {
   pending:  styles.badgePending,
@@ -21,7 +29,8 @@ const BADGE: Record<string, string> = {
 
 export default function AdminListingsPage() {
   const supabase = createClient()
-  const [filter, setFilter] = useState('all')
+  const [filter, setFilter] = useState('pending')
+  const [timeFilter, setTimeFilter] = useState('all_time')
   const [listings, setListings] = useState<any[]>([])
   const [loading, setLoading] = useState(true)
   const [selected, setSelected] = useState<any | null>(null) // full detail modal
@@ -41,13 +50,31 @@ export default function AdminListingsPage() {
         listing_photos(photo_url, sort_order, is_cover)
       `)
       .order('created_at', { ascending: false })
-      .limit(100)
+      .limit(500)
 
     if (filter !== 'all') q = q.eq('status', filter)
+
+    // Time filter logic
+    const now = new Date()
+    if (timeFilter === 'today') {
+      const today = new Date(now.getFullYear(), now.getMonth(), now.getDate())
+      q = q.gte('created_at', today.toISOString())
+    } else if (timeFilter === 'yesterday') {
+      const today = new Date(now.getFullYear(), now.getMonth(), now.getDate())
+      const yesterday = new Date(now.getFullYear(), now.getMonth(), now.getDate() - 1)
+      q = q.gte('created_at', yesterday.toISOString()).lt('created_at', today.toISOString())
+    } else if (timeFilter === 'last_7_days') {
+      const last7 = new Date(now.getFullYear(), now.getMonth(), now.getDate() - 7)
+      q = q.gte('created_at', last7.toISOString())
+    } else if (timeFilter === 'last_30_days') {
+      const last30 = new Date(now.getFullYear(), now.getMonth(), now.getDate() - 30)
+      q = q.gte('created_at', last30.toISOString())
+    }
+
     const { data } = await q
     setListings(data ?? [])
     setLoading(false)
-  }, [filter])
+  }, [filter, timeFilter])
 
   useEffect(() => { fetchListings() }, [fetchListings])
 
@@ -87,23 +114,48 @@ export default function AdminListingsPage() {
         <p className={styles.pageSub}>Click any listing to see full details</p>
       </div>
 
-      {/* Filter tabs */}
-      <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap', marginBottom: 20 }}>
-        {STATUS_OPTIONS.map(s => (
-          <button
-            key={s}
-            onClick={() => setFilter(s)}
-            style={{
-              padding: '6px 16px', borderRadius: 999,
-              border: filter === s ? '1px solid #FFD600' : '1px solid rgba(255,255,255,0.1)',
-              background: filter === s ? 'rgba(255,214,0,0.1)' : 'transparent',
-              color: filter === s ? '#FFD600' : 'rgba(255,255,255,0.45)',
-              fontSize: 13, fontWeight: 600, cursor: 'pointer', textTransform: 'capitalize',
-            }}
-          >
-            {s}
-          </button>
-        ))}
+      {/* Filters Container */}
+      <div style={{ display: 'flex', flexDirection: 'column', gap: 16, marginBottom: 24 }}>
+        
+        {/* Status Filter */}
+        <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap', alignItems: 'center' }}>
+          <span style={{ fontSize: 12, color: 'rgba(255,255,255,0.4)', textTransform: 'uppercase', letterSpacing: 1, marginRight: 8 }}>Status</span>
+          {STATUS_OPTIONS.map(s => (
+            <button
+              key={s}
+              onClick={() => setFilter(s)}
+              style={{
+                padding: '6px 16px', borderRadius: 999,
+                border: filter === s ? '1px solid #FFD600' : '1px solid rgba(255,255,255,0.1)',
+                background: filter === s ? 'rgba(255,214,0,0.1)' : 'transparent',
+                color: filter === s ? '#FFD600' : 'rgba(255,255,255,0.45)',
+                fontSize: 13, fontWeight: 600, cursor: 'pointer', textTransform: 'capitalize',
+              }}
+            >
+              {s}
+            </button>
+          ))}
+        </div>
+
+        {/* Time Filter */}
+        <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap', alignItems: 'center' }}>
+          <span style={{ fontSize: 12, color: 'rgba(255,255,255,0.4)', textTransform: 'uppercase', letterSpacing: 1, marginRight: 8 }}>Time</span>
+          {TIME_OPTIONS.map(t => (
+            <button
+              key={t.id}
+              onClick={() => setTimeFilter(t.id)}
+              style={{
+                padding: '6px 16px', borderRadius: 999,
+                border: timeFilter === t.id ? '1px solid #3b82f6' : '1px solid rgba(255,255,255,0.1)',
+                background: timeFilter === t.id ? 'rgba(59,130,246,0.1)' : 'transparent',
+                color: timeFilter === t.id ? '#3b82f6' : 'rgba(255,255,255,0.45)',
+                fontSize: 12, fontWeight: 600, cursor: 'pointer',
+              }}
+            >
+              {t.label}
+            </button>
+          ))}
+        </div>
       </div>
 
       <div className={styles.tableWrap}>
@@ -355,8 +407,8 @@ export default function AdminListingsPage() {
               )}
               <button
                 onClick={async () => {
-                  if (confirm('Kya aap sure hain? Ye listing permanently delete ho jayegi.')) {
-                    await supabase.from('listings').delete().eq('id', selected.id)
+                  if (confirm('Kya aap sure hain? Ye listing "deleted" tab mein chali jayegi.')) {
+                    await supabase.from('listings').update({ status: 'deleted' }).eq('id', selected.id)
                     setSelected(null)
                     fetchListings()
                   }
@@ -366,7 +418,7 @@ export default function AdminListingsPage() {
                   background: 'rgba(220,38,38,0.1)', color: '#f87171', fontWeight: 700, cursor: 'pointer'
                 }}
               >
-                🗑️ Delete Listing
+                🗑️ Remove Listing
               </button>
             </div>
 
