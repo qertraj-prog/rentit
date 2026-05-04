@@ -49,6 +49,12 @@ function SignupForm() {
         toast.error(error.message)
       }
     } else if (data.session) {
+      // Force update phone in public.users to ensure it's captured
+      // (in case the database trigger missed the phone field)
+      if (phone && data.user?.id) {
+        await supabase.from('users').update({ phone }).eq('id', data.user.id)
+      }
+
       // Email confirm OFF — user immediately logged in
       toast.success(`Welcome, ${fullName}! 🎉`)
       router.push(redirect)
