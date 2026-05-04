@@ -353,7 +353,23 @@ export default function AdminListingsPage() {
                   ✅ This listing is LIVE on website
                 </div>
               )}
+              <button
+                onClick={async () => {
+                  if (confirm('Kya aap sure hain? Ye listing permanently delete ho jayegi.')) {
+                    await supabase.from('listings').delete().eq('id', selected.id)
+                    setSelected(null)
+                    fetchListings()
+                  }
+                }}
+                style={{
+                  padding: '14px', borderRadius: 10, border: '1px solid rgba(220,38,38,0.3)',
+                  background: 'rgba(220,38,38,0.1)', color: '#f87171', fontWeight: 700, cursor: 'pointer'
+                }}
+              >
+                🗑️ Delete Listing
+              </button>
             </div>
+
           </div>
         </div>
       )}
