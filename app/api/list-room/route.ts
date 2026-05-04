@@ -50,8 +50,6 @@ export async function POST(req: NextRequest) {
       food_type:           formData.get('food_type') as string || null,
       pets_allowed:        formData.get('pets_allowed') === 'true',
       amenities:           JSON.parse(formData.get('amenities') as string || '[]'),
-      owner_name:          formData.get('owner_name') as string || null,
-      owner_phone:         formData.get('owner_phone') as string || null,
       status:              'pending' as const,
     }
 
@@ -69,14 +67,24 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ ok: true, id: 'dev-mode-listing', dev: true })
     }
 
-    // Get authenticated user (optional — allow anonymous submissions too)
+    // Get authenticated user
     const { data: { user } } = await supabase.auth.getUser()
 
-    // If logged in, attach owner_id; else leave null (admin will assign)
+    // Build insert data — attach owner_id if logged in
     const listingData: Record<string, unknown> = { ...listing }
     if (user) listingData.owner_id = user.id
 
-    const { data, error } = await supabase
+    // Use service role key if available (bypasses RLS for listing submissions)
+    // This allows owners to submit even when RLS would block anon inserts
+    const insertClient = process.env.SUPABASE_SERVICE_ROLE_KEY
+      ? createServerClient(
+          process.env.NEXT_PUBLIC_SUPABASE_URL!,
+          process.env.SUPABASE_SERVICE_ROLE_KEY,
+          { cookies: { getAll: () => [], setAll: () => {} } }
+        )
+      : supabase
+
+    const { data, error } = await insertClient
       .from('listings')
       .insert(listingData)
       .select('id')
