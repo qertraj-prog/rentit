@@ -104,9 +104,13 @@ export async function POST(req: NextRequest) {
         const ext = file.name.split('.').pop()?.toLowerCase() || 'jpg'
         const path = `${data.id}/${i}-${Date.now()}.${ext}`
 
+        // Convert the File to a Buffer for the Supabase node client to handle properly on Vercel
+        const arrayBuffer = await file.arrayBuffer()
+        const buffer = Buffer.from(arrayBuffer)
+
         const { data: uploadData, error: uploadError } = await insertClient.storage
           .from('listing-photos')
-          .upload(path, file, { contentType: file.type, upsert: true })
+          .upload(path, buffer, { contentType: file.type, upsert: true })
 
         if (uploadError) {
           console.error(`Photo ${i} upload error:`, uploadError.message)
